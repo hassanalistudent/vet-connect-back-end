@@ -20,11 +20,12 @@ import customerSupportRoutes from "./routes/customerSupportRouter.js"
 const port = process.env.PORT || 5000;
 
 connectDB();
+
 const app = express();
 
 // ✅ CORS - FIXED (Add BEFORE all middleware/routes)
 app.use(cors({
-  origin: 'http://localhost:5173',  // Your Vite frontend
+  origin: ["http://localhost:5173", "https://your-frontend-domain"], // Your Vite frontend
   credentials: true
 }));
 
