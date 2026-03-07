@@ -23,6 +23,7 @@ connectDB();
 
 const app = express();
 
+
 app.use(cors({
   origin: [
     "http://localhost:5173",
@@ -34,8 +35,8 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Allow preflight requests
-app.options("*", cors());
+// FIXED OPTIONS HANDLER
+app.options("/*", cors());
 
 
 app.use(express.json());
