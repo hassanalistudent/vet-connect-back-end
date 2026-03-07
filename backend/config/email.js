@@ -13,7 +13,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export const sendEmail = async ({ to, subject, html }) => {
   try {
     const response = await resend.emails.send({
-      from: "VetConnect <onboarding@resend.dev>",
+      from: "VetConnect <no-reply@vetconnecthub.com>",
       to,
       subject,
       html,
