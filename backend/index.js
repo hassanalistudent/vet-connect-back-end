@@ -35,8 +35,6 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// FIXED OPTIONS HANDLER
-app.options("/*", cors());
 
 
 app.use(express.json());
