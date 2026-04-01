@@ -9,7 +9,6 @@ const doctorAppointmentSchema = new mongoose.Schema({
   petId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "Pet", 
-    required: true 
   },
   ownerId: { 
     type: mongoose.Schema.Types.ObjectId, 

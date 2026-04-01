@@ -39,22 +39,35 @@ const createAppointment = asyncHandler(async (req, res) => {
 
   const effectiveOwnerId = req.user._id;
 
-  const appointment = await DoctorAppointment.create({
+  // Validate required fields
+  if (!doctorId || !appointmentDate || !appointmentTime || !appointmentType) {
+    res.status(400);
+    throw new Error("Missing required fields: doctorId, appointmentDate, appointmentTime, appointmentType are required");
+  }
+
+  // Check if pet is provided - make pet optional
+  let appointmentData = {
     doctorId,
-    petId,
     ownerId: effectiveOwnerId,
     appointmentDate,
     appointmentTime,
     charges,
     appointmentType,
     status: "Scheduled",
-  });
+  };
+
+  // Only add petId if it's provided and not empty
+  if (petId && petId !== "") {
+    appointmentData.petId = petId;
+  }
+
+  const appointment = await DoctorAppointment.create(appointmentData);
 
   // Fetch doctor and owner info
   const doctor = await User.findById(doctorId);
   const owner = await User.findById(effectiveOwnerId);
 
-   res.status(201).json({
+  res.status(201).json({
     success: true,
     message: "Appointment created successfully",
     appointment,
@@ -69,8 +82,6 @@ const createAppointment = asyncHandler(async (req, res) => {
       appointment
     );
   }
-
- 
 });
 
 // -------------------- READ (R) --------------------
@@ -287,19 +298,28 @@ const completeAppointment = asyncHandler(async (req, res) => {
 
   const updated = await appointment.save();
 
-  const history = await MedicalHistory.create({
-    petId: appointment.petId,
-    doctorId: appointment.doctorId,
-    appointmentId: appointment._id,
-    visitDate: appointment.appointmentDate || new Date(),
-  });
-
-  res.json({
-    success: true,
-    message: "Appointment completed and medical history created",
-    appointment: updated,
-    history,
-  });
+  // Only create medical history if pet exists
+  if (appointment.petId) {
+    const history = await MedicalHistory.create({
+      petId: appointment.petId,
+      doctorId: appointment.doctorId,
+      appointmentId: appointment._id,
+      visitDate: appointment.appointmentDate || new Date(),
+    });
+    
+    res.json({
+      success: true,
+      message: "Appointment completed and medical history created",
+      appointment: updated,
+      history,
+    });
+  } else {
+    res.json({
+      success: true,
+      message: "Appointment completed (no medical history created as no pet was selected)",
+      appointment: updated,
+    });
+  }
 });
 
 // -------------------- DELETE (D) --------------------
