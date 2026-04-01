@@ -541,10 +541,27 @@ const getAllDoctors = asyncHandler(async (req, res) => {
     });
   }
 
+  // Sort doctors by number of reviews first (descending), then by rating (descending)
+  const sortedDoctors = verifiedDoctors.sort((a, b) => {
+    // Get numReviews from doctorProfile (default to 0 if not present)
+    const aReviews = a.doctorProfile?.numReviews || 0;
+    const bReviews = b.doctorProfile?.numReviews || 0;
+    
+    // First, sort by number of reviews (higher first)
+    if (aReviews !== bReviews) {
+      return bReviews - aReviews;
+    }
+    
+    // If number of reviews is the same, sort by rating (higher first)
+    const aRating = a.doctorProfile?.rating || 0;
+    const bRating = b.doctorProfile?.rating || 0;
+    return bRating - aRating;
+  });
+
   res.status(200).json({
     success: true,
-    count: verifiedDoctors.length,
-    doctors: verifiedDoctors
+    count: sortedDoctors.length,
+    doctors: sortedDoctors
   });
 });
 
