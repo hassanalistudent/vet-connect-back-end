@@ -6,11 +6,13 @@ const createToken = (res, userId) => {
   });
 
   res.cookie("jwt", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
-    sameSite: "None",
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  });
+  httpOnly: true,
+  secure: true,
+  sameSite: "None",
+  domain: ".vetconnecthub.com", // ✅ works across frontend/backend
+  path: "/",
+  maxAge: 30 * 24 * 60 * 60 * 1000,
+});
 };
 
 export default createToken;
