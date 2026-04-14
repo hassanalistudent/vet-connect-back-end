@@ -54,6 +54,7 @@ const createUser = asyncHandler(async (req, res) => {
 
 // ✅ Login user with verification check
 const loginUser = asyncHandler(async (req, res) => {
+  console.log("Route hit: /auth");
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
