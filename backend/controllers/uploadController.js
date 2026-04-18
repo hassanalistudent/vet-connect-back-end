@@ -57,3 +57,18 @@ export const uploadDocumentImage = (req, res) => {
     "Document image uploaded successfully"
   );
 };
+
+//  Controller to upload payment receipt image
+export const uploadReceiptImage = (req, res) => {
+  if (!req.file) {
+    return res.status(400).send({ message: "No receipt image file provided" });
+  }
+
+  // Use your existing handleUpload helper
+  handleUpload(
+    req.file.buffer,
+    "vetconnect/receipts", // folder path in Cloudinary/S3
+    res,
+    "Payment receipt image uploaded successfully"
+  );
+};

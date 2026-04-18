@@ -254,30 +254,58 @@ const ownerResponse = asyncHandler(async (req, res) => {
   });
 });
 
+// Controller: Save receipt URL into appointment record
+const saveReceiptUrl = async (req, res) => {
+  try {
+    const appointmentId = req.params.id;   // ✅ from URL
+    const { receiptUrl } = req.body; 
+
+    // Find appointment
+    const appointment = await DoctorAppointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).send({ message: "Appointment not found" });
+    }
+
+    // Save receipt URL
+    appointment.paymentReceiptImage = receiptUrl;
+    await appointment.save();
+
+    res.status(200).send({
+      message: "Receipt URL saved successfully",
+      secure_url: appointment.paymentReceiptImage,
+    });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
 // @desc   Mark appointment paid
 // @route  PUT /api/appointments/:id/pay
 // @access Private
-const markAppointmentPaid = asyncHandler(async (req, res) => {
-  const { isPaid } = req.body;
+const markAppointmentPaid = async (req, res) => {
+  const appointmentId = req.params.id; 
+  try {
+    const appointment = await DoctorAppointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).send({ message: "Appointment not found" });
+    }
 
-  const appointment = await DoctorAppointment.findById(req.params.id);
+    // Only allow marking as paid if receipt exists
+    if (!appointment.paymentReceiptImage) {
+      return res.status(400).send({ message: "No receipt uploaded yet" });
+    }
 
-  if (!appointment) {
-    res.status(404);
-    throw new Error("Appointment not found");
+    appointment.isPaid = true;
+    await appointment.save();
+
+    res.status(200).send({
+      message: "Payment verified and marked as paid",
+      secure_url: appointment.paymentReceiptImage,
+    });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
   }
-
-  appointment.isPaid = Boolean(isPaid);
-
-  const updated = await appointment.save();
-
-  res.json({
-    success: true,
-    message: "Appointment payment status updated",
-    appointment: updated,
-  });
-});
-
+};
 // @desc   Complete appointment and create medical history
 // @route  PUT /api/appointments/:id/complete
 // @access Private (Doctor)
@@ -401,5 +429,6 @@ export {
   markAppointmentPaid,
   completeAppointment,
   deleteOrCancelAppointment,
-  notifyDoctorsAgain
+  notifyDoctorsAgain,
+  saveReceiptUrl
 };

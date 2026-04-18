@@ -13,6 +13,7 @@ import {
   completeAppointment,
   deleteOrCancelAppointment,
   notifyDoctorsAgain,
+  saveReceiptUrl
 } from "../controllers/appointmentController.js";
 
 import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
@@ -48,6 +49,8 @@ router.route("/:id/owner-response")
   .put(authenticate, ownerResponse);
 
 // Mark appointment as paid
+router.route("/:id/save-receipt")
+  .put(authenticate, saveReceiptUrl);
 router.route("/:id/pay")
   .put(authenticate, markAppointmentPaid);
 

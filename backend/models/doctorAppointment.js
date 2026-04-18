@@ -15,43 +15,36 @@ const doctorAppointmentSchema = new mongoose.Schema({
     ref: "User", 
     required: true 
   },
-  appointmentDate: { 
-    type: Date, 
-    required: true 
-  },
+  appointmentDate: { type: Date, required: true },
   appointmentTime: { 
     type: String, 
     required: true,
-    match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, // ✅ HH:mm format
+    match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, // HH:mm format
   },
   status: {
     type: String,
-    enum: ["Scheduled","Rescheduled", "Completed","Accepted", "Cancelled"],
+    enum: ["Scheduled","Rescheduled","Completed","Accepted","Cancelled"],
     default: "Scheduled",
   },
 
-  // ✅ Medical fields
+  // Medical fields
   diagnosis: { type: String },
   treatment: { type: String },
   prescriptions: { type: String },
 
-  // ✅ Business fields
-  charges: { 
-    type: Number, 
-    required: true, 
-    min: 0 
-  },
-  isPaid: { 
-    type: Boolean, 
-    default: false 
-  },
+  // Business fields
+  charges: { type: Number, required: true, min: 0 },
+  isPaid: { type: Boolean, default: false },
 
-  // ✅ Appointment type
+  // Appointment type
   appointmentType: {
     type: String,
     enum: ["Home Visit", "Video Call", "On Clinic"],
     required: true
   },
+
+  // ✅ New fields for payment
+  paymentReceiptImage: { type: String }, // Cloudinary/S3 URL
 }, { timestamps: true });
 
 export default mongoose.model("DoctorAppointment", doctorAppointmentSchema);

@@ -4,6 +4,7 @@ import {
   uploadUserProfileImage,
   uploadPetProfileImage,
   uploadDocumentImage,
+  uploadReceiptImage
 } from "../controllers/uploadController.js";
 
 const router = express.Router();
@@ -45,6 +46,15 @@ router.post("/document", (req, res) => {
   uploadSingleImage(req, res, (err) => {
     if (err) return res.status(400).send({ message: err.message });
     uploadDocumentImage(req, res);
+  });
+});
+
+router.post("/receipt", (req, res) => {
+  uploadSingleImage(req, res, (err) => {
+    if (err) {
+      return res.status(400).send({ message: err.message });
+    }
+    uploadReceiptImage(req, res);
   });
 });
 
