@@ -8,7 +8,7 @@ const createToken = (res, userId) => {
   res.cookie("jwt", token, {
   httpOnly: true,
   secure: true,
-  sameSite: "None",
+  sameSite: "Strict",
   domain: ".vetconnecthub.com", // ✅ works across frontend/backend
   path: "/",
   maxAge: 30 * 24 * 60 * 60 * 1000,
