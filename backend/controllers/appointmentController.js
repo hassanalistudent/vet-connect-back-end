@@ -309,7 +309,7 @@ const saveReceiptUrl = async (req, res) => {
     });
 
     // ✅ Trigger email asynchronously (no second res.send)
-    (async () => {
+    setImmediate(async () => {
       try {
         const owner = await User.findById(appointment.ownerId);
         if (owner && owner.email) {
