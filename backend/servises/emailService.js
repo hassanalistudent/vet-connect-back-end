@@ -58,7 +58,7 @@ export async function sendAppointmentEmail(doctorEmail, doctorName, ownerName, a
 }
 
 export async function sendDoctorResponseEmail(ownerEmail, ownerName, doctorName, appointment) {
-  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/appointments/${appointment._id}`;
+  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/petowner/${appointment._id}/owner_response`;
 
   // Dynamic subject line as a sentence
   let subject;
@@ -145,7 +145,7 @@ export async function sendOwnerResponseEmail(doctorEmail, doctorName, ownerName,
 
 
 export async function sendReceiptReceivedEmail(ownerEmail, ownerName, appointment) {
-  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/appointments/${appointment._id}`;
+  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/petowner/${appointment._id}/owner_response`;
 
   await sendEmail({
     to: ownerEmail,
@@ -171,7 +171,7 @@ export async function sendReceiptReceivedEmail(ownerEmail, ownerName, appointmen
 
 
 export async function sendPaymentConfirmationEmail(ownerEmail, ownerName, doctorName, appointment) {
-  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/appointments/${appointment._id}`;
+  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/petowner/${appointment._id}/owner_response`;
 
   await sendEmail({
     to: ownerEmail,
@@ -219,7 +219,7 @@ export async function sendDoctorPaymentNotificationEmail(doctorEmail, doctorName
 }
 
 export async function sendAppointmentCompletionEmail(ownerEmail, ownerName, doctorName, appointment) {
-  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/appointments/${appointment._id}`;
+  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/petowner/${appointment._id}/owner_response`;
 
   await sendEmail({
     to: ownerEmail,
