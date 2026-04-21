@@ -3,7 +3,9 @@ import asyncHandler from "express-async-handler";
 import DoctorAppointment from "../models/doctorAppointment.js";
 import MedicalHistory from "../models/medicalHistory.js";
 import User from "../models/user.js"
-import { sendAppointmentEmail } from "../servises/emailService.js";
+import { sendAppointmentEmail,sendDoctorResponseEmail,sendAppointmentCancelledEmailToDoctor,sendAppointmentCompletionEmail
+  ,sendDoctorPaymentNotificationEmail,sendOwnerResponseEmail
+ } from "../servises/emailService.js";
 /*
   req.userInfo example:
   {
@@ -67,13 +69,7 @@ const createAppointment = asyncHandler(async (req, res) => {
   const doctor = await User.findById(doctorId);
   const owner = await User.findById(effectiveOwnerId);
 
-  res.status(201).json({
-    success: true,
-    message: "Appointment created successfully",
-    appointment,
-  });
-
-  // Send email to doctor
+    // Send email to doctor
   if (doctor && doctor.email) {
     await sendAppointmentEmail(
       doctor.email,
@@ -82,6 +78,14 @@ const createAppointment = asyncHandler(async (req, res) => {
       appointment
     );
   }
+
+  res.status(201).json({
+    success: true,
+    message: "Appointment created successfully",
+    appointment,
+  });
+
+
 });
 
 // -------------------- READ (R) --------------------
@@ -202,11 +206,12 @@ const getAppointmentById = asyncHandler(async (req, res) => {
 // @desc   Doctor response (accept / reschedule / cancel)
 // @route  PUT /api/appointments/:id/doctor-response
 // @access Private (Doctor)
+
+
 const doctorResponse = asyncHandler(async (req, res) => {
   const { status, appointmentDate, appointmentTime } = req.body;
 
   const appointment = await DoctorAppointment.findById(req.params.id);
-
   if (!appointment) {
     res.status(404);
     throw new Error("Appointment not found");
@@ -223,22 +228,35 @@ const doctorResponse = asyncHandler(async (req, res) => {
     message: "Doctor response updated",
     appointment: updated,
   });
+
+  // Fetch doctor and owner info
+  const doctor = await User.findById(appointment.doctorId);
+  const owner = await User.findById(appointment.ownerId);
+
+  // Send email notification to owner
+  if (owner && owner.email) {
+    await sendDoctorResponseEmail(
+      owner.email,
+      owner.fullName,
+      doctor.fullName,
+      updated
+    );
+  }
 });
 
 // @desc   Pet owner response (accept / cancel)
 // @route  PUT /api/appointments/:id/owner-response
 // @access Private (PetOwner)
-const ownerResponse = asyncHandler(async (req, res) => {
+ const ownerResponse = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
   const appointment = await DoctorAppointment.findById(req.params.id);
-
   if (!appointment) {
     res.status(404);
     throw new Error("Appointment not found");
   }
 
-  if (!["Scheduled", "Cancelled","Accepted"].includes(status)) {
+  if (!["Scheduled", "Cancelled", "Accepted"].includes(status)) {
     res.status(400);
     throw new Error("Invalid status for owner response");
   }
@@ -252,13 +270,27 @@ const ownerResponse = asyncHandler(async (req, res) => {
     message: "Owner response updated",
     appointment: updated,
   });
+
+  // Fetch doctor and owner info
+  const doctor = await User.findById(appointment.doctorId);
+  const owner = await User.findById(appointment.ownerId);
+
+  // Send email notification to doctor
+  if (doctor && doctor.email) {
+    await sendOwnerResponseEmail(
+      doctor.email,
+      doctor.fullName,
+      owner.fullName,
+      updated
+    );
+  }
 });
 
 // Controller: Save receipt URL into appointment record
 const saveReceiptUrl = async (req, res) => {
   try {
     const appointmentId = req.params.id;   // ✅ from URL
-    const { receiptUrl } = req.body; 
+    const { receiptUrl } = req.body;  
 
     // Find appointment
     const appointment = await DoctorAppointment.findById(appointmentId);
@@ -274,11 +306,22 @@ const saveReceiptUrl = async (req, res) => {
       message: "Receipt URL saved successfully",
       secure_url: appointment.paymentReceiptImage,
     });
+
+    // Fetch owner info
+    const owner = await User.findById(appointment.ownerId);
+
+    // Send email notification to owner
+    if (owner && owner.email) {
+      await sendReceiptReceivedEmail(
+        owner.email,
+        owner.fullName,
+        appointment
+      );
+    }
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
 };
-
 // @desc   Mark appointment paid
 // @route  PUT /api/appointments/:id/pay
 // @access Private
@@ -302,10 +345,25 @@ const markAppointmentPaid = async (req, res) => {
       message: "Payment verified and marked as paid",
       secure_url: appointment.paymentReceiptImage,
     });
+
+    // Fetch owner info
+    const owner = await User.findById(appointment.ownerId);
+    const doctor = await User.findById(appointment.doctorId);
+
+    // Send email notification to owner
+    if (owner && owner.email) {
+      await sendPaymentConfirmationEmail(
+        owner.email,
+        owner.fullName,
+        doctor.fullName,
+        appointment
+      );
+    }
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
 };
+
 // @desc   Complete appointment and create medical history
 // @route  PUT /api/appointments/:id/complete
 // @access Private (Doctor)
@@ -313,7 +371,6 @@ const completeAppointment = asyncHandler(async (req, res) => {
   const { diagnosis, treatment, prescriptions } = req.body;
 
   const appointment = await DoctorAppointment.findById(req.params.id);
-
   if (!appointment) {
     res.status(404);
     throw new Error("Appointment not found");
@@ -327,29 +384,39 @@ const completeAppointment = asyncHandler(async (req, res) => {
   const updated = await appointment.save();
 
   // Only create medical history if pet exists
+  let history = null;
   if (appointment.petId) {
-    const history = await MedicalHistory.create({
+    history = await MedicalHistory.create({
       petId: appointment.petId,
       doctorId: appointment.doctorId,
       appointmentId: appointment._id,
       visitDate: appointment.appointmentDate || new Date(),
     });
-    
-    res.json({
-      success: true,
-      message: "Appointment completed and medical history created",
-      appointment: updated,
-      history,
-    });
-  } else {
-    res.json({
-      success: true,
-      message: "Appointment completed (no medical history created as no pet was selected)",
-      appointment: updated,
-    });
+  }
+
+  res.json({
+    success: true,
+    message: history
+      ? "Appointment completed and medical history created"
+      : "Appointment completed (no medical history created as no pet was selected)",
+    appointment: updated,
+    history,
+  });
+
+  // Fetch doctor and owner info
+  const doctor = await User.findById(appointment.doctorId);
+  const owner = await User.findById(appointment.ownerId);
+
+  // Send completion email to owner
+  if (owner && owner.email) {
+    await sendAppointmentCompletionEmail(
+      owner.email,
+      owner.fullName,
+      doctor.fullName,
+      updated
+    );
   }
 });
-
 // -------------------- DELETE (D) --------------------
 
 // @desc   Cancel appointment (soft delete)
@@ -372,6 +439,30 @@ const deleteOrCancelAppointment = asyncHandler(async (req, res) => {
     message: "Appointment cancelled",
     appointment: updated,
   });
+
+  // Fetch doctor and owner info
+  const doctor = await User.findById(appointment.doctorId);
+  const owner = await User.findById(appointment.ownerId);
+
+  // Notify owner
+  if (owner && owner.email) {
+    await sendAppointmentCancelledEmailToOwner(
+      owner.email,
+      owner.fullName,
+      doctor.fullName,
+      updated
+    );
+  }
+
+  // Notify doctor
+  if (doctor && doctor.email) {
+    await sendAppointmentCancelledEmailToDoctor(
+      doctor.email,
+      doctor.fullName,
+      owner.fullName,
+      updated
+    );
+  }
 });
 
 // Admin notify doctors again for multiple appointments

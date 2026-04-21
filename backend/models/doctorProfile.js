@@ -18,7 +18,21 @@ const doctorProfileSchema = new mongoose.Schema({
   image: { type: String, required: true },
   degreeName: { type: String, default: "DVM" },
   yearsOfExperience: { type: Number },
-  specialization: { type: String, enum: ["Cats", "Dogs", "Birds"] },
+  specialization: {
+  type: String,
+  enum: [
+    "Companion Animals",
+    "Equine",
+    "Livestock",
+    "Exotics",
+    "Wildlife",
+    "Surgery",
+    "Internal Medicine",
+    "Dermatology",
+    "Dentistry",
+    "Emergency Care"
+  ]
+},
 
   servicesOffered: {
     videoConsultation: {
