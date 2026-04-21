@@ -84,7 +84,7 @@ export async function sendDoctorResponseEmail(ownerEmail, ownerName, doctorName,
     subject,
     html: `
       <p>Dear ${ownerName},</p>
-      <p>Dr. ${doctorName} has updated your appointment.</p>
+      <p>Dr. ${doctorName} has ${appointment.status} appointment.</p>
       <ul>
         <li><strong>Status:</strong> ${appointment.status}</li>
         <li><strong>Date:</strong> ${appointment.appointmentDate}</li>
@@ -103,7 +103,7 @@ export async function sendDoctorResponseEmail(ownerEmail, ownerName, doctorName,
 
 
 export async function sendOwnerResponseEmail(doctorEmail, doctorName, ownerName, appointment) {
-  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/doctor/${appointment._id}/owner-response`;
+  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/doctor/${appointment._id}/doctor-response`;
 
   // Dynamic subject line as a sentence
   let subject;
@@ -126,7 +126,7 @@ export async function sendOwnerResponseEmail(doctorEmail, doctorName, ownerName,
     subject,
     html: `
       <p>Dear Dr. ${doctorName},</p>
-      <p>${ownerName} has updated their response to the appointment.</p>
+      <p>${ownerName} has ${appointment.status} the appointment.</p>
       <ul>
         <li><strong>Status:</strong> ${appointment.status}</li>
         <li><strong>Date:</strong> ${appointment.appointmentDate}</li>
@@ -195,7 +195,7 @@ export async function sendPaymentConfirmationEmail(ownerEmail, ownerName, doctor
 }
 
 export async function sendDoctorPaymentNotificationEmail(doctorEmail, doctorName, ownerName, appointment) {
-  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/doctor/${appointment._id}`;
+  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/doctor/${appointment._id}/doctor-response`;
 
   await sendEmail({
     to: doctorEmail,
@@ -243,7 +243,7 @@ export async function sendAppointmentCompletionEmail(ownerEmail, ownerName, doct
 }
 
 export async function sendAppointmentCancelledEmailToDoctor(doctorEmail, doctorName, ownerName, appointment) {
-  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/doctor/${appointment._id}`;
+  const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/doctor/${appointment._id}/doctor-response`;
 
   await sendEmail({
     to: doctorEmail,
