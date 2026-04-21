@@ -4,7 +4,7 @@ import DoctorAppointment from "../models/doctorAppointment.js";
 import MedicalHistory from "../models/medicalHistory.js";
 import User from "../models/user.js"
 import { sendAppointmentEmail,sendDoctorResponseEmail,sendAppointmentCancelledEmailToDoctor,sendAppointmentCompletionEmail
-  ,sendDoctorPaymentNotificationEmail,sendOwnerResponseEmail
+  ,sendDoctorPaymentNotificationEmail,sendOwnerResponseEmail,sendReceiptReceivedEmail
  } from "../servises/emailService.js";
 /*
   req.userInfo example:
@@ -302,25 +302,22 @@ const saveReceiptUrl = async (req, res) => {
     appointment.paymentReceiptImage = receiptUrl;
     await appointment.save();
 
-    // ✅ Send response once
     res.status(200).send({
       message: "Receipt URL saved successfully",
       secure_url: appointment.paymentReceiptImage,
     });
 
-    // ✅ Trigger email asynchronously (no second res.send)
-    setImmediate(async () => {
-      try {
-        const owner = await User.findById(appointment.ownerId);
-        if (owner && owner.email) {
-          await sendReceiptReceivedEmail(owner.email, owner.fullName, appointment);
-          console.log("✅ Receipt received email sent to", owner.email);
-        }
-      } catch (emailErr) {
-        console.error("❌ Failed to send receipt email:", emailErr.message);
-      }
-    })();
+    // Fetch owner info
+    const owner = await User.findById(appointment.ownerId);
 
+    // Send email notification to owner
+    if (owner && owner.email) {
+      await sendReceiptReceivedEmail(
+        owner.email,
+        owner.fullName,
+        appointment
+      );
+    }
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
