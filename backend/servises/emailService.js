@@ -34,9 +34,9 @@ export async function sendPasswordResetEmail(email, token) {
 
 export async function sendAppointmentEmail(doctorEmail, doctorName, ownerName, appointment) {
   const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/doctor/${appointment._id}/doctor-response`;
-
+  
   await sendEmail({
-    to: doctorEmail,
+    to: [doctorEmail, "admin.vetconnecthub@gmail.com"], 
     subject: "New Appointment Scheduled",
     html: `
       <p>Dear Dr. ${doctorName},</p>
@@ -56,6 +56,7 @@ export async function sendAppointmentEmail(doctorEmail, doctorName, ownerName, a
 
   console.log("✅ Appointment email sent to", doctorEmail);
 }
+
 
 export async function sendDoctorResponseEmail(ownerEmail, ownerName, doctorName, appointment) {
   const link = `${process.env.FRONTEND_URL || "http://localhost:5173"}/petowner/${appointment._id}/owner-response`;
