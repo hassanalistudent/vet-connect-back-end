@@ -11,10 +11,14 @@ import {sendVerificationEmail,sendPasswordResetEmail} from "../servises/emailSer
 
 // ✅ Register new user with email verification
 const createUser = asyncHandler(async (req, res) => {
-  const { fullName, email, phone, password, role } = req.body;
+  const { fullName, email, phone, password, role, acceptedPolicies } = req.body;
 
   if (!fullName || !email || !phone || !password || !role) {
     return res.status(400).json({ message: "Please fill all required fields" });
+  }
+
+  if (acceptedPolicies !== true) {
+    return res.status(400).json({ message: "You must accept the Privacy Policy and Terms of Service" });
   }
 
   const userExists = await User.findOne({ email });
@@ -31,11 +35,12 @@ const createUser = asyncHandler(async (req, res) => {
     phone,
     password: hashedPassword,
     role,
+    acceptedPolicies, // ✅ store acceptance in DB
   });
 
   await newUser.save();
 
-   res.status(201).json({
+  res.status(201).json({
     message: "Signup successful. Please check your email to verify your account.",
     _id: newUser._id,
     fullName: newUser.fullName,
@@ -43,14 +48,14 @@ const createUser = asyncHandler(async (req, res) => {
     phone: newUser.phone,
     role: newUser.role,
     isVerified: newUser.isVerified,
+    // ⚠️ acceptedPolicies intentionally NOT included in JWT payload
   });
 
   // Generate verification token and send email
   const token = await setVerificationToken(newUser);
   await sendVerificationEmail(newUser.email, token);
-
-
 });
+
 
 // ✅ Login user with verification check
 const loginUser = asyncHandler(async (req, res) => {

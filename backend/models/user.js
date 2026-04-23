@@ -18,6 +18,9 @@ const userSchema = new mongoose.Schema({
   verificationToken: { type: String },           // random token sent via email
   verificationTokenExpiry: { type: Date },       // expiry time for token
 
+  // ✅ Policy acceptance field
+  acceptedPolicies: { type: Boolean, default: false }, // whether user accepted Privacy Policy & Terms
+
 }, { timestamps: true });
 
 export default mongoose.models.User || mongoose.model("User", userSchema);
